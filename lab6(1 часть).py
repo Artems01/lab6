@@ -15,50 +15,75 @@ import random
 import itertools
 
 # Размер матрицы(n * n)
-n = 4
+n = int(input())
 
 # Количество подматриц
 submatrix_size = n // 2
 
-#Заполнение пустой матрицы
+# Заполнение пустой матрицы
 matrix_A = np.array([[0 for _ in range(n)] for _ in range(n)])
 
 # Заполнение матрицы A рандомными числами
 for r in range(n):
     for c in range(n):
-        matrix_A[r][c] = random.randint(0, 10)
+        matrix_A[r][c] = random.randint(1, 5)
 
-#Вариант 1: Алгоритмический подход
+print('Исходная матрица:')
+print(matrix_A)
+
+# 1 Часть
+# Вариант 1: Алгоритмический подход
 def generate_matrix_algorithm(n, submatrix_size, matrix_A):
     # Создаем функцию для замены подматрицы нулевой матрицей
-    def replace_submatrix(matrix, submatrix_size, i, j):
-        matrix[i:i+submatrix_size, j:j+submatrix_size] = 0
+    def replace_submatrix_with_zeros(matrix, submatrix_coords):
+        for coord in submatrix_coords:
+            i, j = coord
+            matrix[i:i + submatrix_size, j:j + submatrix_size] = 0
 
-    # Перебираем все возможные комбинации заменяемых подматриц
-    for i in range(0, n, submatrix_size):
-        for j in range(0, n, submatrix_size):
-            # Копируем исходную матрицу для каждой комбинации
-            matrix_B = matrix_A.copy()
-            # Заменяем подматрицу нулевой матрицей
-            replace_submatrix(matrix_B, submatrix_size, i, j)
-    return matrix_B
+    def generate_all_zero_combinations(matrix, block_size, r, submatrices, temp_combination, index):
+        if r == 0:
+            temp_matrix = matrix.copy()
+            replace_submatrix_with_zeros(temp_matrix, temp_combination)
+            for row in temp_matrix:
+                print(row)
+            print('')
+            return
 
-#Вариант 2: С помощью функций питона
+        if index >= len(submatrices):
+            return
+
+        temp_combination.append(submatrices[index])
+        generate_all_zero_combinations(matrix, block_size, r - 1, submatrices, temp_combination, index + 1)
+        temp_combination.pop()
+        generate_all_zero_combinations(matrix, block_size, r, submatrices, temp_combination, index + 1)
+
+    submatrices = [(i, j) for i in range(0, n, submatrix_size) for j in range(0, n, submatrix_size)]
+    for r in range(1, len(submatrices) + 1):
+        temp_combination = []
+        generate_all_zero_combinations(matrix_A, submatrix_size, r, submatrices, temp_combination, 0)
+
+
+
+
+# Вариант 2: С помощью функций питона
 def generate_matrix_python(n, submatrix_size, matrix_A):
-    # Создаем функцию для формирования матрицы с нулевой подматрицей
-    def create_matrix_with_zero_submatrix(matrix, submatrix_size, i, j):
-        B = matrix.copy()
-        B[i:i + submatrix_size, j:j + submatrix_size] = 0
-        return B
+    def replace_submatrix_with_zeros(matrix, submatrix_coords, submatrix_size):
+        for coord in submatrix_coords:
+            i, j = coord
+            matrix[i:i + submatrix_size, j:j + submatrix_size] = 0
 
-    # Формируем все возможные варианты матриц с помощью itertools.product
-    possible_combinations = itertools.product(range(0, n, submatrix_size), repeat=2)
+    def generate_all_zero_combinations(matrix, submatrix_size):
+        submatrices = [(i, j) for i in range(0, n, submatrix_size) for j in range(0, n, submatrix_size)]
 
-    for i, j in possible_combinations:
-        # Создаем матрицу для каждой комбинации
-        matrix_B = create_matrix_with_zero_submatrix(matrix_A, submatrix_size, i, j)
+        for r in range(1, len(submatrices) + 1):
+            combinations = itertools.combinations(submatrices, r)
+            for combination in combinations:
+                temp_matrix = np.copy(matrix)
+                replace_submatrix_with_zeros(temp_matrix, combination, submatrix_size)
+                for row in temp_matrix:
+                    print(row)
+                print('')
 
-    return matrix_B
 
 # Функция для измерения времени выполнения функции
 def measure_time(function, n, submatrix_size, matrix_A):
@@ -69,8 +94,9 @@ def measure_time(function, n, submatrix_size, matrix_A):
     return timeit.default_timer() - start_time
 
 print("1 Часть")
-print("Вывод всех возможных варинтов матрицы")
+print("Вывод всех возможных варинтов матрицы по алгоритмическому методу:")
 print(generate_matrix_algorithm(n, submatrix_size, matrix_A))
+print("Вывод всех возможных вариантов матрицы с помощью функций питона:")
 
 # Время выполнения обеих функций
 time_algorithm = measure_time(generate_matrix_algorithm, n, submatrix_size, matrix_A)
